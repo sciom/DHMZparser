@@ -169,5 +169,14 @@ class DHMZ_buoy_data():
         self.timeseries = self.timeseries.set_index("date")
         self.timeseries = self.timeseries.drop(columns=["day", "hour"])
         self.timeseries = self.timeseries.sort_index()
+    
+    def to_csv(self, filename):
+        self.timeseries.to_csv(filename)
         
-        
+    def to_json(self, filename):
+        self.timeseries.to_json(filename)
+    
+    def to_xml(self, filename):
+        self.timeseries.to_xml(filename)
+
+    
