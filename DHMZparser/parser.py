@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from pprint import pprint
 
+
 class DHMZ_buoy_data():
     def __init__(self, datafile):
         self.datafile = datafile
@@ -34,10 +35,18 @@ class DHMZ_buoy_data():
                 self.year = i.split("GODINA")[1].strip()
             if "NIVO:" in i:
                 self.depth = i.split("NIVO:")[1].strip()
+            if "IZVORNI PODACI:" in i:
+                self.origin = i.split("IZVORNI PODACI:")[1].strip()
         
+        leap = False
+        if int(self.year) % 4 == 0:
+            leap = True
+        vl = 28
+        if leap:
+            vl = 29
         months = {
             "SIJECANJ": 31,
-            "VELJACA": 29, # prijestupni
+            "VELJACA": vl, # prijestupni
             "OZUJAK": 31,
             "TRAVANJ": 30,
             "SVIBANJ": 31,
@@ -154,7 +163,17 @@ class DHMZ_buoy_data():
             "STUDENI": "11",
             "PROSINAC": "12"
         }
-        self.timeseries = self.dataframe.drop(columns=["mean", "std", "max 1", "min 1", "max 2", "t max", "min 2", "t min", "none nbr"])
+        self.timeseries = self.dataframe.drop(
+            columns=[
+                "mean",
+                "std",
+                "max 1",
+                "min 1",
+                "max 2",
+                "t max",
+                "min 2",
+                "t min",
+                "none nbr"])
         self.timeseries = self.timeseries.stack(dropna=False)
         self.timeseries = self.timeseries.reset_index()
         self.timeseries = self.timeseries.rename(columns={
@@ -165,7 +184,12 @@ class DHMZ_buoy_data():
         self.timeseries["day"] = self.timeseries["day"].astype(int)
         self.timeseries["hour"] = self.timeseries["hour"].astype(int)-1
         self.timeseries["temperature"] = self.timeseries["temperature"].astype(float)
-        self.timeseries["date"] = pd.to_datetime(self.timeseries["day"].astype(str) + "-" + months[self.month] + "-" + self.year + " " + self.timeseries["hour"].astype(str) + ":00:00")
+        self.timeseries["date"] = pd.to_datetime(
+                self.timeseries["day"].astype(str) \
+                + "-" \
+                + months[self.month] \
+                + "-" + self.year \
+                + " " + self.timeseries["hour"].astype(str) + ":00:00", dayfirst=True)
         self.timeseries = self.timeseries.set_index("date")
         self.timeseries = self.timeseries.drop(columns=["day", "hour"])
         self.timeseries = self.timeseries.sort_index()
